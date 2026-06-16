@@ -1,0 +1,381 @@
+{
+  "updatedAt": "2026-06-05T03:42:32.997Z",
+  "catalog": [
+    {
+      "name": "Pedestrian Network",
+      "id": "pedestrian-network",
+      "excerpt": "This data is based on the sidewalk inventory from Transportation Services, Toronto road centrelines, and manual collection from aerial imagery. Pednet is integrated with centerline intersections, traffic signals, pedestrian crosswalks and crossovers, traffic signal data from Transportation Services as well as other City of Toronto datasets.",
+      "refreshRate": "As available",
+      "lastRefreshed": "2026-02-20 20:56:54.146991",
+      "formats": [
+        "CSV",
+        "XLSX",
+        "SHP",
+        "GEOJSON",
+        "GPKG",
+        "PDF"
+      ],
+      "resources": [
+        {
+          "name": "Pedestrian Network Data",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/93b36f84-4a25-4b22-9812-44912ca34e02"
+        },
+        {
+          "name": "Pedestrian Network Data - 4326.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/f5390504-c209-42d5-aebe-c79a7a9267bc/download/pedestrian-network-data-4326.gpkg"
+        },
+        {
+          "name": "Pedestrian Network Data - 2945.gpkg",
+          "format": "GPKG",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/c49040b4-b910-41e2-8724-85a9d3ba9320/download/pedestrian-network-data-2945.gpkg"
+        },
+        {
+          "name": "Pedestrian Network Data - 4326.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/33865740-bdf4-4876-a498-c198ce0f1484/download/pedestrian-network-data-4326.csv"
+        },
+        {
+          "name": "Pedestrian Network Data - 2945.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/d7398c13-68cd-4c7e-95c3-8a50ecfae1b7/download/pedestrian-network-data-2945.csv"
+        },
+        {
+          "name": "Pedestrian Network Data - 4326.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/33835def-35f2-4705-a348-b7983e8e66a1/download/pedestrian-network-data-4326.geojson"
+        },
+        {
+          "name": "Pedestrian Network Data - 2945.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/2fcd3a97-70d2-445f-b09c-daf2dae8f561/download/pedestrian-network-data-2945.geojson"
+        },
+        {
+          "name": "Pedestrian Network Data - 4326.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/38d88239-6792-474e-8a2e-f232bffc71d5/download/pedestrian-network-data-4326.zip"
+        },
+        {
+          "name": "Pedestrian Network Data - 2945.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/c61c9555-bd10-4774-b1c7-b83c56def0fc/download/pedestrian-network-data-2945.zip"
+        },
+        {
+          "name": "Pedestrian Network 2019 - WGS84",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/ea8eaf04-01c4-4254-a9fa-d54de8c23d15/download/pedestrian-network-2019-wgs84.zip"
+        },
+        {
+          "name": "Pedestrian Network Readme",
+          "format": "XLSX",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/a84888bc-a702-4f8a-a3af-77aff25c98fd/download/pedestrian-network-readme.xlsx"
+        },
+        {
+          "name": "Toronto Walkability Analysis",
+          "format": "PDF",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/d546f5d1-ecc2-4237-bcc9-84000715b60a/download/toronto-walkability-analysis.pdf"
+        },
+        {
+          "name": "Pedestrian Network Data - 2952.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/2b5a9735-4b99-4382-8718-e0a82f388777/download/pedestrian-network-data-2952.gpkg"
+        },
+        {
+          "name": "Pedestrian Network Data - 2952.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/4fb0563f-4ea4-40f4-87ad-9386b7aad2eb/download/pedestrian-network-data-2952.csv"
+        },
+        {
+          "name": "Pedestrian Network Data - 2952.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/68751bd4-61d3-44c0-9a99-9fed46884ffb/download/pedestrian-network-data-2952.zip"
+        },
+        {
+          "name": "Pedestrian Network Data - 2952.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/4b5c7a84-dea1-4137-875d-71d7f662c83f/resource/23145d0e-479d-44c6-94b9-20b49441161b/download/pedestrian-network-data-2952.geojson"
+        }
+      ]
+    },
+    {
+      "name": "Road Restrictions",
+      "id": "road-restrictions",
+      "excerpt": "This dataset is a live feed of current road restrictions/closures and RESCU incidents in the City of Toronto.\r\n\r\nNote: As of November 23rd, 2017, we have moved the Road Restrictions feed to a RESTful service allowing us to improve the delivery of the information.",
+      "refreshRate": "Real-time",
+      "lastRefreshed": "2022-08-04 14:30:48.590762",
+      "formats": [
+        "CSV",
+        "JSON",
+        "XLSX",
+        "XML"
+      ],
+      "resources": [
+        {
+          "name": "readme",
+          "format": "XLSX",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/2265bfca-e845-4613-b341-70ee2ac73fbe/resource/0c97292b-0198-41ac-b0e3-1939cbbf8282/download/readme.xlsx"
+        },
+        {
+          "name": "Road Restrictions (Version 3) - JSON",
+          "format": "JSON",
+          "url": "https://secure.toronto.ca/opendata/cart/road_restrictions/v3?format=json"
+        },
+        {
+          "name": "Road Restrictions (Version 3) - CSV",
+          "format": "CSV",
+          "url": "https://secure.toronto.ca/opendata/cart/road_restrictions/v3?format=csv"
+        },
+        {
+          "name": "Road Restrictions (Version 3) - XML",
+          "format": "XML",
+          "url": "https://secure.toronto.ca/opendata/cart/road_restrictions/v3?format=xml&stream=n"
+        }
+      ]
+    },
+    {
+      "name": "Cycling Network",
+      "id": "cycling-network",
+      "excerpt": "This dataset shares the mapping details of Toronto's existing cycling network, including cycle tracks, bicycle lanes, contra-flow bicycle lanes, multi-use trails and on-street shared cycling connections.",
+      "refreshRate": "Semi-annually",
+      "lastRefreshed": "2026-06-01 15:44:07.030173",
+      "formats": [
+        "CSV",
+        "SHP",
+        "GEOJSON",
+        "GPKG"
+      ],
+      "resources": [
+        {
+          "name": "cycling-network",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/71fdb11f-99df-4f7b-8af1-d7240dae69b3"
+        },
+        {
+          "name": "cycling-network - 4326.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/264ec41d-7a88-4953-9675-0bfc7a527496/download/cycling-network-4326.csv"
+        },
+        {
+          "name": "cycling-network - 4326.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/ce9baaa2-6866-4dee-963e-ac1ac7ae2d05/download/cycling-network-4326.zip"
+        },
+        {
+          "name": "cycling-network - 4326.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/781abbf0-8f63-403e-80b1-fbcf3d9c33b1/download/cycling-network-4326.gpkg"
+        },
+        {
+          "name": "cycling-network - 4326.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/023da9a2-8848-4e10-9cad-e7f9119cd874/download/cycling-network-4326.geojson"
+        },
+        {
+          "name": "cycling-network - 2952.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/ff0ab46b-74bb-4138-9305-80c36a5daa25/download/cycling-network-2952.csv"
+        },
+        {
+          "name": "cycling-network - 2952.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/6ac1bc63-a607-47e1-8b66-633f20983cd6/download/cycling-network-2952.zip"
+        },
+        {
+          "name": "cycling-network - 2952.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abbe5ee3-e249-4f86-a219-f0022eaddcc9/resource/8cacb2f1-f58e-473d-b5ae-bb0573029b64/download/cycling-network-2952.gpkg"
+        }
+      ]
+    },
+    {
+      "name": "Sidewalk Inventory",
+      "id": "sidewalk-inventory",
+      "excerpt": "The sidewalk inventory provides information on presence and location of sidewalks along all Transportation Corridors in the city of Toronto using the Toronto Centreline as the base network.",
+      "refreshRate": "As available",
+      "lastRefreshed": "2019-07-23 17:59:24.7985",
+      "formats": [
+        "SHP",
+        "ZIP",
+        "DOCX"
+      ],
+      "resources": [
+        {
+          "name": "sidewalk-inventory-wgs84",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/11b6b9d6-09a7-43d1-8f8a-267c83991d1b/resource/a84628ca-d0a8-4a1c-bb9e-adf9aca68a27/download/sidewalk-inventory-wgs84.zip"
+        },
+        {
+          "name": "sidewalk-inventory-utm6",
+          "format": "ZIP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/11b6b9d6-09a7-43d1-8f8a-267c83991d1b/resource/bbded890-5534-4099-96aa-65dd734cd76f/download/sidewalk-inventory-utm6.zip"
+        },
+        {
+          "name": "sidewalk-inventory-read-me",
+          "format": "DOCX",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/11b6b9d6-09a7-43d1-8f8a-267c83991d1b/resource/82398603-fc24-45df-bc93-ce11695c7f3c/download/sidewalk-inventory-read-me.docx"
+        }
+      ]
+    },
+    {
+      "name": "Traffic Signals Tabular",
+      "id": "traffic-signals-tabular",
+      "excerpt": "This dataset contains all the locations of the traffic signals in the City of Toronto.",
+      "refreshRate": "As available",
+      "lastRefreshed": "2026-05-30 00:07:59.274815",
+      "formats": [
+        "CSV",
+        "XLSX",
+        "SHP",
+        "GEOJSON",
+        "GPKG"
+      ],
+      "resources": [
+        {
+          "name": "Traffic Beacon",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/3991b036-9fdc-4f59-a930-147b090be0c6"
+        },
+        {
+          "name": "Pedestrian Crossover",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/414721ad-2e13-4aca-a421-39ff75e4f5ea"
+        },
+        {
+          "name": "Traffic Signal",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/139e5357-0caf-4c9a-a6be-ce94d38bcfeb"
+        },
+        {
+          "name": "Traffic Beacon - 4326.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/68690966-eb29-45ca-99e2-dc9ecf73aee1/download/traffic-beacon-4326.geojson"
+        },
+        {
+          "name": "Traffic Beacon - 2952.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/160fd735-ddbe-4152-a6ca-3817d3fb81b2/download/traffic-beacon-2952.geojson"
+        },
+        {
+          "name": "Traffic Beacon - 4326.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/b3e8157c-4aed-4844-ab95-e95b5f89f4d5/download/traffic-beacon-4326.zip"
+        },
+        {
+          "name": "Traffic Beacon - 2952.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/b70fd2c3-c10a-406f-98c0-9c791da3da63/download/traffic-beacon-2952.zip"
+        },
+        {
+          "name": "Traffic Beacon - 4326.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/97a0eb86-fd61-48f0-8ca8-a928acd88bb1/download/traffic-beacon-4326.gpkg"
+        },
+        {
+          "name": "Traffic Beacon - 2952.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/9320faca-4b24-47d3-b795-0da32beb147c/download/traffic-beacon-2952.gpkg"
+        },
+        {
+          "name": "Traffic Beacon - 4326.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/3daea1c8-40c4-45bc-98a5-00ae033ad59d/download/traffic-beacon-4326.csv"
+        },
+        {
+          "name": "Pedestrian Crossover - 4326.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/e40ad092-49ce-4e6c-9997-bb95d13d4cce/download/pedestrian-crossover-4326.csv"
+        },
+        {
+          "name": "Pedestrian Crossover - 2952.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/eba0c5ab-9089-4ee8-a51a-f85b4e17297a/download/pedestrian-crossover-2952.csv"
+        },
+        {
+          "name": "Traffic Signal - 4326.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/e331c953-7e49-418b-9eab-594881c76f33/download/traffic-signal-4326.geojson"
+        },
+        {
+          "name": "Traffic Signal - 2952.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/e5de4efa-dd1b-4b40-bc10-fa6b976e379a/download/traffic-signal-2952.geojson"
+        },
+        {
+          "name": "Traffic Signal - 4326.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/2305ef1f-ea25-4440-b607-86f3c4a601ec/download/traffic-signal-4326.zip"
+        },
+        {
+          "name": "Traffic Signal - 2952.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/49fd2dd3-9e8e-4d36-905c-1ea87ae9d0ec/download/traffic-signal-2952.zip"
+        },
+        {
+          "name": "Traffic Signal - 4326.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/235ee346-cdd7-4e3b-a351-1a4800438896/download/traffic-signal-4326.gpkg"
+        },
+        {
+          "name": "Traffic Signal - 2952.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/c4017129-51c1-4846-b431-4a98df11aea8/download/traffic-signal-2952.gpkg"
+        },
+        {
+          "name": "Traffic Signal - 4326.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/aeda8fd7-e1d6-4d34-b62a-a7d6be10cc96/download/traffic-signal-4326.csv"
+        },
+        {
+          "name": "Traffic Signal - 2952.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/9f5c257a-cb10-43cc-bab6-d71ba9f108dc/download/traffic-signal-2952.csv"
+        },
+        {
+          "name": "Traffic Beacon - 2952.csv",
+          "format": "CSV",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/cd681297-48cd-442b-93a3-0ec11711a67d/download/traffic-beacon-2952.csv"
+        },
+        {
+          "name": "Pedestrian Crossover - 4326.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/414b8e5f-9f73-4ece-a8dc-a6f74d25662d/download/pedestrian-crossover-4326.geojson"
+        },
+        {
+          "name": "Pedestrian Crossover - 2952.geojson",
+          "format": "GeoJSON",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/c47ca9d6-fdb1-45ed-a3d5-0683534e0a01/download/pedestrian-crossover-2952.geojson"
+        },
+        {
+          "name": "Pedestrian Crossover - 4326.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/c3992050-a637-4882-938f-aa36ce2d8216/download/pedestrian-crossover-4326.zip"
+        },
+        {
+          "name": "Pedestrian Crossover - 2952.zip",
+          "format": "SHP",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/d07e35c4-62d2-4ed5-b755-761667b89779/download/pedestrian-crossover-2952.zip"
+        },
+        {
+          "name": "Pedestrian Crossover - 4326.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/fca93cae-ca80-43d3-b6a4-27d153776a90/download/pedestrian-crossover-4326.gpkg"
+        },
+        {
+          "name": "Pedestrian Crossover - 2952.gpkg",
+          "format": "gpkg",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/465fcd16-a9a2-4ab0-b5c6-edcadfb4173f/download/pedestrian-crossover-2952.gpkg"
+        },
+        {
+          "name": "Traffic Signal Tabular Readme",
+          "format": "XLSX",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/8098ddfa-ec61-4c23-afd7-76830be73e4e/download/traffic-signal-tabular-readme.xlsx"
+        }
+      ]
+    },
+    {
+      "id": "traffic-signals",
+      "error": "404 https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=traffic-signals"
+    }
+  ]
+}
