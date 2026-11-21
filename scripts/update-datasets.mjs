@@ -12,7 +12,7 @@ const packages = [
 ];
 
 async function fetchJson(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`${response.status} ${url}`);
   const text = await response.text();
   try {

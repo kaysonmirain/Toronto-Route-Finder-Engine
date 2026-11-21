@@ -7,9 +7,9 @@ export type ElevationPoint = LatLng & {
 
 export type ElevationSummary = {
   points: ElevationPoint[];
-  ascent: number;
-  descent: number;
-  maxGrade: number;
+  ascent: number | null;
+  descent: number | null;
+  maxGrade: number | null;
 };
 
 type OpenTopoResponse = {
@@ -22,13 +22,16 @@ export async function fetchElevation(route: LatLng[]): Promise<ElevationSummary>
 
   try {
     const locations = sampled.map((point) => `${point.lat},${point.lng}`).join("|");
-    const response = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locations)}`);
+    const response = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locations)}`, { signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw new Error("Elevation service unavailable.");
     const data = (await response.json()) as OpenTopoResponse;
     const elevations = data.results?.map((row) => row.elevation) ?? [];
+    if (elevations.length !== sampled.length || !elevations.every((value) => typeof value === "number" && Number.isFinite(value))) {
+      throw new Error("Elevation data is incomplete.");
+    }
     return summarizeElevation(sampled, elevations);
   } catch {
-    return synthesizeElevation(sampled);
+    return emptySummary();
   }
 }
 
@@ -51,16 +54,7 @@ function summarizeElevation(points: LatLng[], elevations: number[]): ElevationSu
     profile.push({ ...point, distance, elevation });
   });
 
-  return { points: profile, ascent, descent, maxGrade: Math.min(maxGrade, 22) };
-}
-
-function synthesizeElevation(points: LatLng[]): ElevationSummary {
-  const synthetic = points.map((point, index) => {
-    const valley = Math.sin((point.lng + 79.39) * 80) * 6;
-    const northRise = (point.lat - 43.63) * 210;
-    return 76 + valley + northRise + Math.sin(index * 0.7) * 2;
-  });
-  return summarizeElevation(points, synthetic);
+  return { points: profile, ascent, descent, maxGrade };
 }
 
 function sampleRoute(route: LatLng[], maxPoints: number): LatLng[] {
@@ -91,5 +85,5 @@ function sampleRoute(route: LatLng[], maxPoints: number): LatLng[] {
 }
 
 function emptySummary(): ElevationSummary {
-  return { points: [], ascent: 0, descent: 0, maxGrade: 0 };
+  return { points: [], ascent: null, descent: null, maxGrade: null };
 }

@@ -115,7 +115,7 @@ function buildRouteResult(
     quality: {
       comfort,
       directness,
-      stairMeters: 0,
+      stairMeters: null,
       trailMeters: 0,
       sidewalkMeters: distance,
       knownLitMeters: 0,
@@ -130,7 +130,8 @@ function buildRouteResult(
         : "Uses fast pedestrian routing for this Toronto walk.",
       `${directness}% directness compared with straight-line distance.`,
       roughMeters > 40 ? `${Math.round(roughMeters)} m may be rough or unpaved.` : "No rough segments were reported by the pedestrian router.",
-      `Step data is summarized from ${maneuvers.length} pedestrian maneuvers.`
+      `Step data is summarized from ${maneuvers.length} pedestrian maneuvers.`,
+      "Stair coverage is unknown; this route is not verified as step-free."
     ]
   };
 }

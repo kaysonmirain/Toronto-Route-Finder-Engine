@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-05T03:42:32.997Z",
+  "updatedAt": "2026-11-21T00:55:56.413Z",
   "catalog": [
     {
       "name": "Pedestrian Network",
@@ -101,14 +101,14 @@
     {
       "name": "Road Restrictions",
       "id": "road-restrictions",
-      "excerpt": "This dataset is a live feed of current road restrictions/closures and RESCU incidents in the City of Toronto.\r\n\r\nNote: As of November 23rd, 2017, we have moved the Road Restrictions feed to a RESTful service allowing us to improve the delivery of the information.",
+      "excerpt": "This dataset is a live feed of current road restrictions/closures and RESCU incidents in the City of Toronto.",
       "refreshRate": "Real-time",
       "lastRefreshed": "2022-08-04 14:30:48.590762",
       "formats": [
         "CSV",
-        "JSON",
         "XLSX",
-        "XML"
+        "XML",
+        "JSON"
       ],
       "resources": [
         {
@@ -138,7 +138,7 @@
       "id": "cycling-network",
       "excerpt": "This dataset shares the mapping details of Toronto's existing cycling network, including cycle tracks, bicycle lanes, contra-flow bicycle lanes, multi-use trails and on-street shared cycling connections.",
       "refreshRate": "Semi-annually",
-      "lastRefreshed": "2026-06-01 15:44:07.030173",
+      "lastRefreshed": "2026-11-16 19:15:50.095421",
       "formats": [
         "CSV",
         "SHP",
@@ -222,7 +222,7 @@
       "id": "traffic-signals-tabular",
       "excerpt": "This dataset contains all the locations of the traffic signals in the City of Toronto.",
       "refreshRate": "As available",
-      "lastRefreshed": "2026-05-30 00:07:59.274815",
+      "lastRefreshed": "2026-11-21 00:09:42.969512",
       "formats": [
         "CSV",
         "XLSX",

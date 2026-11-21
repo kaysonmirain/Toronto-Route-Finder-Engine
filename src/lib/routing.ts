@@ -22,7 +22,7 @@ export type RouteStep = {
 export type RouteQuality = {
   comfort: number;
   directness: number;
-  stairMeters: number;
+  stairMeters: number | null;
   trailMeters: number;
   sidewalkMeters: number;
   knownLitMeters: number;

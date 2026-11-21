@@ -15,7 +15,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { Disruption, fetchRoadRestrictions, nearestDisruptionMeters } from "./lib/disruptions";
+import { Disruption, DisruptionFeed, fetchRoadRestrictionsWithStatus, nearestDisruptionMeters } from "./lib/disruptions";
 import { ElevationSummary, fetchElevation } from "./lib/elevation";
 import { geocodeToronto, Place } from "./lib/geocode";
 import { buildRouteAlternatives } from "./lib/routeStrategies";
@@ -63,6 +63,7 @@ type RouteState = {
   route: RouteResult;
   elevation: ElevationSummary;
   disruptions: Disruption[];
+  disruptionFeed: DisruptionFeed;
   networkCount: number;
 };
 
@@ -89,7 +90,7 @@ export default function App() {
       if (!from || !to) throw new Error("Both places must resolve inside Toronto.");
 
       const bounds = boundsForPoints([from.point, to.point], 900);
-      const disruptionsPromise = withTimeout(fetchRoadRestrictions(bounds), 3500, []);
+      const disruptionsPromise = withTimeout<DisruptionFeed>(fetchRoadRestrictionsWithStatus(bounds), 6500, { items: [], source: "unavailable" });
       const alternatives = await buildRouteAlternatives(from.point, to.point, []);
 
       const availableMode = (mode && alternatives[mode] ? mode : alternatives.best ? "best" : ROUTE_MODES.find((candidate) => alternatives[candidate.value])?.value) ?? "best";
@@ -106,16 +107,18 @@ export default function App() {
         route,
         elevation,
         disruptions: [],
+        disruptionFeed: { items: [], source: "loading" },
         networkCount: route.path.length
       });
       setDraftFromPoint(from.point);
       setDraftToPoint(to.point);
-      void disruptionsPromise.then((disruptions) => {
+      void disruptionsPromise.then((feed) => {
         setRouteState((current) =>
           current && current.from.label === from.label && current.to.label === to.label
             ? {
                 ...current,
-                disruptions
+                disruptions: feed.items,
+                disruptionFeed: feed
               }
             : current
         );
@@ -318,13 +321,14 @@ export default function App() {
             </button>
           </div>
 
-          <div className="mode-row" role="tablist" aria-label="Routing mode">
+          <div className="mode-row" role="group" aria-label="Routing mode">
             {ROUTE_MODES.map(({ value, icon: Icon, label }) => {
               const route = routeState?.alternatives[value];
               return (
                 <button
                   className={mode === value ? "mode active" : "mode"}
                   type="button"
+                  aria-pressed={mode === value}
                   key={value}
                   onClick={() => selectMode(value)}
                   disabled={Boolean(routeState) && (!route || busy)}
@@ -343,7 +347,7 @@ export default function App() {
         </form>
 
         {error && (
-          <div className="status-line error">
+          <div className="status-line error" role="alert">
             <AlertTriangle size={16} />
             <span>{error}</span>
           </div>
@@ -353,8 +357,8 @@ export default function App() {
           <section className="metrics-band">
             <Metric label="Distance" value={formatDistance(routeState.route.distance)} />
             <Metric label="Time" value={formatMinutes(routeState.route.seconds)} />
-            <Metric label="Comfort" value={`${routeState.route.quality.comfort}%`} />
-            <Metric label="Up / down" value={`${Math.round(routeState.elevation.ascent)} / ${Math.round(routeState.elevation.descent)} m`} />
+            <Metric label="Directness" value={`${routeState.route.quality.directness}%`} />
+            <Metric label="Up / down" value={routeState.elevation.ascent === null || routeState.elevation.descent === null ? "Unavailable" : `${Math.round(routeState.elevation.ascent)} / ${Math.round(routeState.elevation.descent)} m`} />
           </section>
         )}
 
@@ -367,11 +371,13 @@ export default function App() {
               <p className="route-description">{selectedModeDetails(mode ?? "best").description}</p>
               <ElevationChart summary={routeState.elevation} />
               <div className="signal-grid">
-                <Signal label="Stairs" value={formatDistance(routeState.route.quality.stairMeters)} />
-                <Signal label="Closest work" value={Number.isFinite(nearestWork) ? formatDistance(nearestWork) : "None"} />
-                <Signal label="Max grade" value={`${routeState.elevation.maxGrade.toFixed(1)}%`} />
+                <Signal label="Stairs" value={routeState.route.quality.stairMeters === null ? "Unknown" : formatDistance(routeState.route.quality.stairMeters)} />
+                <Signal label="Closest work" value={Number.isFinite(nearestWork) ? formatDistance(nearestWork) : routeState.disruptionFeed.source === "live" ? "None reported" : "Unknown"} />
+                <Signal label="Grade estimate" value={routeState.elevation.maxGrade === null ? "Unavailable" : `${routeState.elevation.maxGrade.toFixed(1)}%`} />
                 <Signal label="Rough path" value={formatDistance(routeState.route.quality.roughSurfaceMeters)} />
               </div>
+              <p className="route-description" role="status">{routeState.disruptionFeed.source === "live" ? "Road restrictions: live City of Toronto feed." : routeState.disruptionFeed.source === "snapshot" ? `Road restrictions: saved City snapshot${routeState.disruptionFeed.updatedAt ? ` from ${new Date(routeState.disruptionFeed.updatedAt).toLocaleDateString()}` : " (date unknown)"}. Check current conditions.` : routeState.disruptionFeed.source === "loading" ? "Loading road restrictions…" : "Current road restrictions unavailable."} Stairs and step-free access are not verified.</p>
+              <p className="route-description"><a href="https://open.toronto.ca/dataset/road-restrictions/" target="_blank" rel="noreferrer">City of Toronto open data</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> · <a href="https://www.opentopodata.org/" target="_blank" rel="noreferrer">SRTM elevation</a></p>
             </section>
 
           </>

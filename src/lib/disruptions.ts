@@ -35,6 +35,16 @@ type RoadRestrictionResponse = {
 };
 
 export async function fetchRoadRestrictions(bounds?: Bounds): Promise<Disruption[]> {
+  return (await fetchRoadRestrictionsWithStatus(bounds)).items;
+}
+
+export type DisruptionFeed = {
+  items: Disruption[];
+  source: "live" | "snapshot" | "unavailable" | "loading";
+  updatedAt?: string;
+};
+
+export async function fetchRoadRestrictionsWithStatus(bounds?: Bounds): Promise<DisruptionFeed> {
   const endpoints = [
     "https://secure.toronto.ca/opendata/cart/road_restrictions/v3?format=json",
     "/data/road-restrictions.json"
@@ -42,17 +52,31 @@ export async function fetchRoadRestrictions(bounds?: Bounds): Promise<Disruption
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, { signal: AbortSignal.timeout(2500) });
       if (!response.ok) continue;
       const data = await parseRestrictionResponse(response);
-      const disruptions = (data.Closure ?? []).map(normalizeRestriction).filter(Boolean) as Disruption[];
-      return bounds ? disruptions.filter((item) => inBounds(item.point, bounds)) : disruptions;
+      if (!Array.isArray(data.Closure)) throw new Error("Invalid road restriction feed.");
+      const now = Date.now();
+      const disruptions = (data.Closure.map(normalizeRestriction).filter(Boolean) as Disruption[])
+        .filter((item) => (!item.start || item.start <= now) && (!item.end || item.end >= now));
+      const source = endpoint.startsWith("https:") ? "live" : "snapshot";
+      let updatedAt: string | undefined;
+      if (source === "snapshot") {
+        try {
+          const metadata = await fetch("/data/source-status.json", { signal: AbortSignal.timeout(1000) });
+          if (metadata.ok) {
+            const status = await metadata.json() as { updatedAt?: string };
+            if (status.updatedAt && Number.isFinite(Date.parse(status.updatedAt))) updatedAt = status.updatedAt;
+          }
+        } catch { /* Keep the snapshot visibly marked even if its date is unavailable. */ }
+      }
+      return { items: bounds ? disruptions.filter((item) => inBounds(item.point, bounds)) : disruptions, source, updatedAt };
     } catch {
       // Try the local fallback next.
     }
   }
 
-  return [];
+  return { items: [], source: "unavailable" };
 }
 
 async function parseRestrictionResponse(response: Response): Promise<RoadRestrictionResponse> {
