@@ -1,4 +1,3 @@
-import { Disruption } from "./disruptions";
 import { RouteMode, RouteResult, RouteSegment, RouteStep } from "./routing";
 import { haversineMeters, LatLng } from "./toronto";
 
@@ -29,8 +28,8 @@ export async function routeWithValhalla(
   origin: LatLng,
   destination: LatLng,
   mode: RouteMode,
-  disruptions: Disruption[],
-  waypoints: LatLng[] = []
+  waypoints: LatLng[] = [],
+  signal?: AbortSignal
 ): Promise<RouteResult> {
   const payload = {
     locations: [
@@ -49,24 +48,18 @@ export async function routeWithValhalla(
 
   const url = new URL("https://valhalla1.openstreetmap.de/route");
   url.searchParams.set("json", JSON.stringify(payload));
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 28_000);
-
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error("Pedestrian router failed.");
-    const data = (await response.json()) as ValhallaResponse;
-    const legs = data.trip?.legs ?? [];
-    const path = legs.flatMap((leg, index) => {
-      const legPath = leg.shape ? decodeValhallaShape(leg.shape) : [];
-      return index > 0 ? legPath.slice(1) : legPath;
-    });
-    const maneuvers = legs.flatMap((leg) => leg.maneuvers ?? []);
-    if (path.length < 2) throw new Error("Pedestrian router did not return a walkable shape.");
-    return buildRouteResult(path, maneuvers, data.trip?.summary?.time, mode, disruptions, waypoints.length);
-  } finally {
-    window.clearTimeout(timeout);
-  }
+  const timeout = AbortSignal.timeout(12000);
+  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
+  if (!response.ok) throw new Error("Pedestrian router failed.");
+  const data = (await response.json()) as ValhallaResponse;
+  const legs = data.trip?.legs ?? [];
+  const path = legs.flatMap((leg, index) => {
+    const legPath = leg.shape ? decodeValhallaShape(leg.shape) : [];
+    return index > 0 ? legPath.slice(1) : legPath;
+  });
+  const maneuvers = legs.flatMap((leg) => leg.maneuvers ?? []);
+  if (path.length < 2) throw new Error("Pedestrian router did not return a walkable shape.");
+  return buildRouteResult(path, maneuvers, data.trip?.summary?.time, mode, waypoints.length);
 }
 
 function pedestrianOptions(mode: RouteMode) {
@@ -81,7 +74,6 @@ function buildRouteResult(
   maneuvers: ValhallaManeuver[],
   summarySeconds: number | undefined,
   mode: RouteMode,
-  disruptions: Disruption[],
   waypointCount: number
 ): RouteResult {
   const segments: RouteSegment[] = [];
@@ -100,9 +92,8 @@ function buildRouteResult(
   const seconds = summarySeconds ?? estimateSeconds(distance, mode);
   const steps = buildSteps(maneuvers, path, distance);
   const roughMeters = maneuvers.filter((maneuver) => maneuver.rough).reduce((sum, maneuver) => sum + (maneuver.length ?? 0) * 1000, 0);
-  const nearbyWork = disruptions.some((item) => path.some((point) => haversineMeters(point, item.point) < 80));
   const directness = Math.round(Math.min(100, Math.max(0, (straightDistance / Math.max(distance, 1)) * 100)));
-  const comfort = Math.round(Math.max(55, Math.min(94, 90 - (roughMeters / Math.max(distance, 1)) * 18 - (nearbyWork ? 4 : 0))));
+  const comfort = Math.round(Math.max(55, Math.min(94, 90 - (roughMeters / Math.max(distance, 1)) * 18)));
 
   return {
     path,
@@ -137,7 +128,7 @@ function buildRouteResult(
 }
 
 function buildSteps(maneuvers: ValhallaManeuver[], path: LatLng[], totalDistance: number): RouteStep[] {
-  const steps = maneuvers.slice(0, 8).map((maneuver) => ({
+  const steps = maneuvers.map((maneuver) => ({
     label: cleanInstruction(maneuver.instruction ?? "Continue walking"),
     distance: (maneuver.length ?? 0) * 1000,
     kind: "footway" as const

@@ -16,13 +16,14 @@ type OpenTopoResponse = {
   results?: { elevation: number }[];
 };
 
-export async function fetchElevation(route: LatLng[]): Promise<ElevationSummary> {
+export async function fetchElevation(route: LatLng[], signal?: AbortSignal): Promise<ElevationSummary> {
   const sampled = sampleRoute(route, 36);
   if (sampled.length < 2) return emptySummary();
 
   try {
     const locations = sampled.map((point) => `${point.lat},${point.lng}`).join("|");
-    const response = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locations)}`, { signal: AbortSignal.timeout(8000) });
+    const deadline = AbortSignal.timeout(8000);
+    const response = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locations)}`, { signal: signal ? AbortSignal.any([signal, deadline]) : deadline });
     if (!response.ok) throw new Error("Elevation service unavailable.");
     const data = (await response.json()) as OpenTopoResponse;
     const elevations = data.results?.map((row) => row.elevation) ?? [];

@@ -50,6 +50,7 @@ async function main() {
   }
 
   const restrictions = await fetchJson("https://secure.toronto.ca/opendata/cart/road_restrictions/v3?format=json");
+  if (!Array.isArray(restrictions.Closure)) throw new Error("Unexpected City road restrictions response.");
 
   await writeFile(new URL("source-status.json", outputDir), JSON.stringify({ updatedAt: new Date().toISOString(), catalog }, null, 2));
   await writeFile(new URL("road-restrictions.json", outputDir), JSON.stringify(restrictions, null, 2));

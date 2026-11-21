@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -15,13 +15,13 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { Disruption, DisruptionFeed, fetchRoadRestrictionsWithStatus, nearestDisruptionMeters } from "./lib/disruptions";
+import { fetchRoadRestrictionsWithStatus, type DisruptionFeed } from "./lib/disruptions";
+import { nearbyRoadRestrictions } from "./lib/restrictionGeometry";
 import { ElevationSummary, fetchElevation } from "./lib/elevation";
 import { geocodeToronto, Place } from "./lib/geocode";
-import { buildRouteAlternatives } from "./lib/routeStrategies";
+import { loadRouteAlternatives, planAvailableRoute } from "./lib/routeStrategies";
 import { RouteMode, RouteResult, RouteSegment } from "./lib/routing";
 import {
-  boundsForPoints,
   formatDistance,
   formatMinutes,
   LatLng,
@@ -48,23 +48,27 @@ const DEFAULT_FROM = "";
 const DEFAULT_TO = "";
 const ROUTE_MODES: Array<{ value: RouteMode; icon: LucideIcon; label: string; description: string }> = [
   { value: "best", icon: Footprints, label: "Best", description: "Balanced for a comfortable walk without adding too much distance." },
-  { value: "shortest", icon: RouteIcon, label: "Short", description: "Most direct walking route between your two points." },
-  { value: "accessible", icon: Activity, label: "Easy", description: "Chooses a calmer route shape with gentler walking conditions." },
-  { value: "green", icon: Trees, label: "Green", description: "Bends toward park, trail, and quieter walking corridors when possible." }
+  { value: "shortest", icon: RouteIcon, label: "Short", description: "Prioritizes a more direct walk." },
+  { value: "accessible", icon: Activity, label: "Easy", description: "Prefers gentler terrain at a slower pace. Step-free access is unverified." },
+  { value: "green", icon: Trees, label: "Green", description: "Prefers paths and adds a park waypoint when a nearby one fits." }
 ];
+
+const EXAMPLE_WALK = {
+  from: { label: "Toronto City Hall", point: { lat: 43.6534, lng: -79.3839 } },
+  to: { label: "Union Station", point: { lat: 43.6453, lng: -79.3806 } }
+} satisfies Record<"from" | "to", Place>;
+const CITY_RESTRICTIONS_URL = "https://open.toronto.ca/dataset/road-restrictions/";
 
 type PinTarget = "from" | "to";
 
 type RouteState = {
-  from: Place;
-  to: Place;
+  request: AbortController;
   alternatives: Partial<Record<RouteMode, RouteResult>>;
   elevations: Partial<Record<RouteMode, ElevationSummary>>;
   route: RouteResult;
-  elevation: ElevationSummary;
-  disruptions: Disruption[];
+  elevation: ElevationSummary | null;
   disruptionFeed: DisruptionFeed;
-  networkCount: number;
+  loadingAlternatives: boolean;
 };
 
 export default function App() {
@@ -78,88 +82,95 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function planRoute(event?: FormEvent) {
-    event?.preventDefault();
-    setBusy(true);
+  const requestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => requestRef.current?.abort(), []);
+
+  function clearWalk() {
+    requestRef.current?.abort();
+    requestRef.current = null;
+    setRouteState(null);
+    setBusy(false);
     setError(null);
+  }
+
+  async function planRoute(event?: FormEvent, example?: typeof EXAMPLE_WALK) {
+    event?.preventDefault();
+    clearWalk();
+    const request = new AbortController();
+    requestRef.current = request;
+    setBusy(true);
 
     try {
-      const [fromMatches, toMatches] = await Promise.all([geocodeToronto(fromText), geocodeToronto(toText)]);
-      const from = fromMatches[0];
-      const to = toMatches[0];
+      const [from, to] = example
+        ? [example.from, example.to]
+        : (await Promise.all([geocodeToronto(fromText), geocodeToronto(toText)])).map((matches) => matches[0]);
+      if (request.signal.aborted) return;
       if (!from || !to) throw new Error("Both places must resolve inside Toronto.");
+      const restrictions = fetchRoadRestrictionsWithStatus(request.signal);
+      const primary = await planAvailableRoute(from.point, to.point, mode ?? "best", request.signal);
+      if (request.signal.aborted) return;
 
-      const bounds = boundsForPoints([from.point, to.point], 900);
-      const disruptionsPromise = withTimeout<DisruptionFeed>(fetchRoadRestrictionsWithStatus(bounds), 6500, { items: [], source: "unavailable" });
-      const alternatives = await buildRouteAlternatives(from.point, to.point, []);
-
-      const availableMode = (mode && alternatives[mode] ? mode : alternatives.best ? "best" : ROUTE_MODES.find((candidate) => alternatives[candidate.value])?.value) ?? "best";
-      const route = alternatives[availableMode];
-      if (!route) throw new Error("No connected pedestrian route was found. Try a closer pair of places.");
-      if (availableMode !== mode) setMode(availableMode);
-      const elevation = await fetchElevation(route.path);
-
-      setRouteState({
-        from,
-        to,
-        alternatives,
-        elevations: { [availableMode]: elevation },
-        route,
-        elevation,
-        disruptions: [],
-        disruptionFeed: { items: [], source: "loading" },
-        networkCount: route.path.length
-      });
+      setMode(primary.mode);
       setDraftFromPoint(from.point);
       setDraftToPoint(to.point);
-      void disruptionsPromise.then((feed) => {
-        setRouteState((current) =>
-          current && current.from.label === from.label && current.to.label === to.label
-            ? {
-                ...current,
-                disruptions: feed.items,
-                disruptionFeed: feed
-              }
-            : current
-        );
+      setRouteState({
+        request,
+        alternatives: { [primary.mode]: primary.route },
+        elevations: {},
+        route: primary.route,
+        elevation: null,
+        disruptionFeed: { source: "loading", items: [] },
+        loadingAlternatives: true
       });
+
+      void restrictions.then((disruptionFeed) => {
+        updateWalk(request, (current) => ({ ...current, disruptionFeed }));
+      });
+      void loadRouteAlternatives(from.point, to.point, primary.mode, request.signal, (label, route) => {
+        updateWalk(request, (current) => ({
+          ...current,
+          alternatives: { ...current.alternatives, [label]: route }
+        }));
+      }).then(() => updateWalk(request, (current) => ({ ...current, loadingAlternatives: false })));
+      void loadElevation(request, primary.mode, primary.route);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Route planning failed.");
+      if (!request.signal.aborted) {
+        setError(caught instanceof Error ? caught.message : "Route planning failed.");
+      }
     } finally {
-      setBusy(false);
+      if (requestRef.current === request) setBusy(false);
     }
   }
 
-  async function selectMode(value: RouteMode) {
+  function updateWalk(request: AbortController, update: (current: RouteState) => RouteState) {
+    if (request.signal.aborted) return;
+    setRouteState((current) => current?.request === request ? update(current) : current);
+  }
+
+  async function loadElevation(request: AbortController, mode: RouteMode, route: RouteResult) {
+    const elevation = await fetchElevation(route.path, request.signal);
+    updateWalk(request, (current) => ({
+      ...current,
+      elevation: current.route === route ? elevation : current.elevation,
+      elevations: { ...current.elevations, [mode]: elevation }
+    }));
+  }
+
+  function selectMode(value: RouteMode) {
     setMode(value);
     const route = routeState?.alternatives[value];
     if (!route || !routeState) return;
+    const cached = routeState.elevations[value];
+    updateWalk(routeState.request, (current) => ({ ...current, route, elevation: cached ?? null }));
+    if (!cached) void loadElevation(routeState.request, value, route);
+  }
 
-    const cachedElevation = routeState.elevations[value];
-    if (cachedElevation) {
-      setRouteState({ ...routeState, route, elevation: cachedElevation, networkCount: route.path.length });
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const elevation = await fetchElevation(route.path);
-      setRouteState((current) =>
-        current
-          ? {
-              ...current,
-              route,
-              elevation,
-              networkCount: route.path.length,
-              elevations: { ...current.elevations, [value]: elevation }
-            }
-          : current
-      );
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Elevation refresh failed.");
-    } finally {
-      setBusy(false);
-    }
+  function tryExample() {
+    setFromText(EXAMPLE_WALK.from.label);
+    setToText(EXAMPLE_WALK.to.label);
+    setPinTarget(null);
+    void planRoute(undefined, EXAMPLE_WALK);
   }
 
   function swapPlaces() {
@@ -167,7 +178,7 @@ export default function App() {
     setToText(fromText);
     setDraftFromPoint(draftToPoint);
     setDraftToPoint(draftFromPoint);
-    setRouteState(null);
+    clearWalk();
   }
 
   function useLocation() {
@@ -180,13 +191,13 @@ export default function App() {
   function updateFromText(value: string) {
     setFromText(value);
     setDraftFromPoint(null);
-    setRouteState(null);
+    clearWalk();
   }
 
   function updateToText(value: string) {
     setToText(value);
     setDraftToPoint(null);
-    setRouteState(null);
+    clearWalk();
   }
 
   function setPinnedPoint(target: PinTarget, point: LatLng) {
@@ -204,16 +215,20 @@ export default function App() {
       setToText(text);
       setDraftToPoint(point);
     }
-    setRouteState(null);
-    setError(null);
+    clearWalk();
   }
 
-  const nearestWork = useMemo(
-    () => (routeState ? nearestDisruptionMeters(routeState.route.path, routeState.disruptions) : Infinity),
-    [routeState]
-  );
-  const fromPoint = draftFromPoint ?? routeState?.from.point ?? null;
-  const toPoint = draftToPoint ?? routeState?.to.point ?? null;
+  const restrictionsByMode = useMemo(() => {
+    if (!routeState) return {};
+    return Object.fromEntries(Object.entries(routeState.alternatives).map(([key, route]) => [
+      key,
+      nearbyRoadRestrictions(route.path, routeState.disruptionFeed.items)
+    ]));
+  }, [routeState?.alternatives, routeState?.disruptionFeed]);
+  const nearby = mode ? restrictionsByMode[mode] ?? [] : [];
+  const feed = routeState?.disruptionFeed;
+  const fromPoint = draftFromPoint;
+  const toPoint = draftToPoint;
 
   return (
     <main className="shell">
@@ -257,16 +272,22 @@ export default function App() {
               pathOptions={{ color: segmentColor(segment), weight: segment.kind === "connector" ? 4 : 6, opacity: 0.86 }}
             />
           ))}
-          {routeState?.disruptions.slice(0, 80).map((item) => (
+          {nearby.slice(0, 30).map(({ item }) => item.polyline.length > 1 ? (
+            <Polyline
+              key={item.id}
+              positions={item.polyline.map((point) => [point.lat, point.lng])}
+              pathOptions={{ color: "#bb4f2e", weight: 5, dashArray: "5 7", opacity: 0.9 }}
+            >
+              <Tooltip>{item.road} · {item.impact}</Tooltip>
+            </Polyline>
+          ) : (
             <CircleMarker
               key={item.id}
               center={[item.point.lat, item.point.lng]}
               radius={6}
               pathOptions={{ color: "#d34a31", fillColor: "#ffb199", fillOpacity: 0.75, weight: 1.5 }}
             >
-              <Tooltip>
-                {item.road} · {item.impact}
-              </Tooltip>
+              <Tooltip>{item.road} · {item.impact}</Tooltip>
             </CircleMarker>
           ))}
         </MapContainer>
@@ -277,16 +298,16 @@ export default function App() {
           <div>
             <p className="eyebrow">Toronto</p>
             <h1>Walkline</h1>
-            <p className="title-help">Plan Toronto walks from typed addresses or exact map pins, then compare the shortest, easiest, greenest, and best-balanced route.</p>
+            <p className="title-help">Compare Toronto walking routes and see where City-reported road work may affect your walk.</p>
           </div>
         </div>
 
         <form className="route-form" onSubmit={planRoute}>
           <div className="form-actions">
-            <button className="icon-button" type="button" onClick={swapPlaces} title="Swap">
+            <button className="icon-button" type="button" onClick={swapPlaces} title="Swap" aria-label="Swap start and end">
               <ArrowRightLeft size={18} />
             </button>
-            <button className="icon-button" type="button" onClick={() => planRoute()} disabled={busy} title="Refresh">
+            <button className="icon-button" type="button" onClick={() => planRoute()} disabled={busy} title="Refresh" aria-label="Refresh route">
               <RefreshCcw size={18} />
             </button>
           </div>
@@ -295,8 +316,8 @@ export default function App() {
             <span>From</span>
             <div className="input-row">
               <MapPin size={18} />
-              <input value={fromText} onChange={(event) => updateFromText(event.target.value)} />
-              <button className="mini-button" type="button" onClick={useLocation} title="Use location">
+              <input aria-label="From" value={fromText} onChange={(event) => updateFromText(event.target.value)} />
+              <button className="mini-button" type="button" onClick={useLocation} title="Use location" aria-label="Use my location">
                 <LocateFixed size={16} />
               </button>
             </div>
@@ -306,16 +327,16 @@ export default function App() {
             <span>To</span>
             <div className="input-row">
               <Navigation size={18} />
-              <input value={toText} onChange={(event) => updateToText(event.target.value)} />
+              <input aria-label="To" value={toText} onChange={(event) => updateToText(event.target.value)} />
             </div>
           </label>
 
           <div className="pin-row" aria-label="Map pin target">
-            <button type="button" className={pinTarget === "from" ? "pin-target active" : "pin-target"} onClick={() => setPinTarget("from")}>
+            <button type="button" aria-pressed={pinTarget === "from"} className={pinTarget === "from" ? "pin-target active" : "pin-target"} onClick={() => setPinTarget("from")}>
               <MapPin size={15} />
               <span>Pin start</span>
             </button>
-            <button type="button" className={pinTarget === "to" ? "pin-target active" : "pin-target"} onClick={() => setPinTarget("to")}>
+            <button type="button" aria-pressed={pinTarget === "to"} className={pinTarget === "to" ? "pin-target active" : "pin-target"} onClick={() => setPinTarget("to")}>
               <Navigation size={15} />
               <span>Pin end</span>
             </button>
@@ -344,6 +365,9 @@ export default function App() {
             <Play size={18} />
             <span>{busy ? "Planning" : "Plan walk"}</span>
           </button>
+          <button type="button" className="example-walk" onClick={tryExample} disabled={busy}>
+            Try City Hall to Union Station
+          </button>
         </form>
 
         {error && (
@@ -358,7 +382,7 @@ export default function App() {
             <Metric label="Distance" value={formatDistance(routeState.route.distance)} />
             <Metric label="Time" value={formatMinutes(routeState.route.seconds)} />
             <Metric label="Directness" value={`${routeState.route.quality.directness}%`} />
-            <Metric label="Up / down" value={routeState.elevation.ascent === null || routeState.elevation.descent === null ? "Unavailable" : `${Math.round(routeState.elevation.ascent)} / ${Math.round(routeState.elevation.descent)} m`} />
+            <Metric label="Up / down" value={!routeState.elevation ? "Loading" : routeState.elevation.ascent === null || routeState.elevation.descent === null ? "Unavailable" : `${Math.round(routeState.elevation.ascent)} / ${Math.round(routeState.elevation.descent)} m`} />
           </section>
         )}
 
@@ -369,15 +393,50 @@ export default function App() {
                 <span>{selectedModeDetails(mode ?? "best").label} walk selected</span>
               </div>
               <p className="route-description">{selectedModeDetails(mode ?? "best").description}</p>
-              <ElevationChart summary={routeState.elevation} />
+              {routeState.elevation ? <ElevationChart summary={routeState.elevation} /> : <p className="chart-empty">Loading elevation…</p>}
               <div className="signal-grid">
                 <Signal label="Stairs" value={routeState.route.quality.stairMeters === null ? "Unknown" : formatDistance(routeState.route.quality.stairMeters)} />
-                <Signal label="Closest work" value={Number.isFinite(nearestWork) ? formatDistance(nearestWork) : routeState.disruptionFeed.source === "live" ? "None reported" : "Unknown"} />
-                <Signal label="Grade estimate" value={routeState.elevation.maxGrade === null ? "Unavailable" : `${routeState.elevation.maxGrade.toFixed(1)}%`} />
-                <Signal label="Rough path" value={formatDistance(routeState.route.quality.roughSurfaceMeters)} />
+                <Signal label="Reports within 90 m" value={feed?.source === "live" || feed?.source === "snapshot" ? String(nearby.length) : "Unknown"} />
+                <Signal label="Grade estimate" value={!routeState.elevation ? "Loading" : routeState.elevation.maxGrade === null ? "Unavailable" : `${routeState.elevation.maxGrade.toFixed(1)}%`} />
+                <Signal label="Reported rough path" value={formatDistance(routeState.route.quality.roughSurfaceMeters)} />
               </div>
-              <p className="route-description" role="status">{routeState.disruptionFeed.source === "live" ? "Road restrictions: live City of Toronto feed." : routeState.disruptionFeed.source === "snapshot" ? `Road restrictions: saved City snapshot${routeState.disruptionFeed.updatedAt ? ` from ${new Date(routeState.disruptionFeed.updatedAt).toLocaleDateString()}` : " (date unknown)"}. Check current conditions.` : routeState.disruptionFeed.source === "loading" ? "Loading road restrictions…" : "Current road restrictions unavailable."} Stairs and step-free access are not verified.</p>
-              <p className="route-description"><a href="https://open.toronto.ca/dataset/road-restrictions/" target="_blank" rel="noreferrer">City of Toronto open data</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> · <a href="https://www.opentopodata.org/" target="_blank" rel="noreferrer">SRTM elevation</a></p>
+              <p className="route-description" role="status">{roadFeedLabel(routeState.disruptionFeed)}</p>
+              {nearby.length > 0 && (
+                <ul className="restriction-list" aria-label="Nearby City road restrictions">
+                  {nearby.slice(0, 5).map(({ item, meters }) => (
+                    <li key={item.id}>
+                      <a href={item.url ?? CITY_RESTRICTIONS_URL} target="_blank" rel="noreferrer">{item.road}</a>
+                      <span>{item.impact} impact · {meters < 5 ? "Crosses or touches the route" : `${formatDistance(meters)} from route`}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <details className="walk-details">
+                <summary>Compare routes</summary>
+                <ul className="restriction-list" aria-label="Route comparison">
+                  {ROUTE_MODES.map(({ value, label }) => {
+                    const option = routeState.alternatives[value];
+                    const count = restrictionsByMode[value]?.length ?? 0;
+                    const known = feed?.source === "live" || feed?.source === "snapshot";
+                    return (
+                      <li key={value}>
+                        <strong>{label}</strong>
+                        <span>{option ? `${formatMinutes(option.seconds)} · ${formatDistance(option.distance)}${known ? ` · ${count} nearby reports` : ""}` : routeState.loadingAlternatives ? "Loading…" : "Unavailable"}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+              <details className="walk-details">
+                <summary>Walking directions</summary>
+                <ol className="direction-list">
+                  {routeState.route.steps.map((step, index) => (
+                    <li key={index}>{step.label}{step.distance > 0 && ` · ${formatDistance(step.distance)}`}</li>
+                  ))}
+                </ol>
+              </details>
+              <p className="route-description">Road restrictions may affect vehicles only. Check signs for pedestrian access.</p>
+              <p className="route-description"><a href={CITY_RESTRICTIONS_URL} target="_blank" rel="noreferrer">City of Toronto open data</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> · <a href="https://www.opentopodata.org/" target="_blank" rel="noreferrer">SRTM elevation</a></p>
             </section>
 
           </>
@@ -388,16 +447,16 @@ export default function App() {
   );
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
-  let timeoutId: number | undefined;
-  const timeout = new Promise<T>((resolve) => {
-    timeoutId = window.setTimeout(() => resolve(fallback), timeoutMs);
+function roadFeedLabel(feed: DisruptionFeed) {
+  if (feed.source === "loading") return "Checking City road restrictions…";
+  if (feed.source === "live") return "Road restrictions from the live City of Toronto feed.";
+  if (feed.source === "unavailable") return "Current road restrictions are unavailable.";
+  const date = feed.updatedAt && new Date(feed.updatedAt).toLocaleString("en-CA", {
+    timeZone: "America/Toronto", dateStyle: "medium", timeStyle: "short"
   });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) window.clearTimeout(timeoutId);
-  }
+  return date
+    ? `Saved City snapshot from ${date} Toronto time. Current conditions may have changed.`
+    : "Saved City snapshot, date unknown. Current conditions may have changed.";
 }
 
 function MapResizeFix() {
@@ -421,10 +480,12 @@ function MapResizeFix() {
 
 function RouteViewport({ points }: { points: LatLng[] }) {
   const map = useMap();
-  if (points.length > 1) {
+  useEffect(() => {
+    if (points.length < 2) return;
     const bounds = L.latLngBounds(points.map((point) => [point.lat, point.lng]));
-    window.setTimeout(() => map.fitBounds(bounds, { padding: [56, 56] }), 0);
-  }
+    const frame = requestAnimationFrame(() => map.fitBounds(bounds, { padding: [56, 56] }));
+    return () => cancelAnimationFrame(frame);
+  }, [map, points]);
   return null;
 }
 

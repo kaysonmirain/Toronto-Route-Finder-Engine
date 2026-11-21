@@ -1,41 +1,35 @@
 # Toronto Route Finder Engine
 
-Walking route planner for Toronto. Pick a start and end point, compare a few route styles on a map, and see distance, time, elevation, and any nearby road closures.
+Walkline is a Toronto walking planner that shows where City-reported road restrictions cross or come close to a route. Compare walking time, distance, and nearby reports before heading out. Use an address, coordinates, a map pin, or the City Hall to Union Station example.
 
-## How it works
+## What the City data adds
 
-The frontend is React + TypeScript with Vite. The map uses Leaflet and react-leaflet with OpenStreetMap tiles.
+The [City of Toronto Road Restrictions dataset](https://open.toronto.ca/dataset/road-restrictions/) supplies the restriction points, line shapes, reported impact, and active dates. Walkline measures the distance between both shapes along the walk and lists City reports within 90 metres for each route. A restriction near the route can affect vehicles only. The planner does not infer a sidewalk closure or certify step-free access.
 
-Address search runs through Nominatim and Photon, scoped to Toronto's bounding box so results stay in the city. You can also drop pins directly on the map.
+The app labels the City feed as live, a dated saved snapshot, or unavailable. A saved snapshot can omit new restrictions. On a static host, run the data refresh before building so the fallback is current.
 
-Routing goes through Valhalla's public pedestrian API. Each mode tweaks costing options on the same engine:
+Contains information licensed under the [Open Government Licence – Toronto](https://open.toronto.ca/open-data-licence/).
 
-- **Short** — straightest path
-- **Best** — balanced default
-- **Easy** — favors calmer geometry and gentler walking conditions
-- **Green** — routes through parks and trail corridors when a reasonable detour exists
+## Routes and elevation
 
-The green and easy modes pick candidate waypoints (parks, ravines, quieter corridors) and request routes through Valhalla with those as intermediate stops. The app keeps whichever option is meaningfully different from the shortest path.
+Routing uses Valhalla's public pedestrian service and OpenStreetMap. The map, the first available walk, and turn directions work independently of optional comparisons and elevation. Short prioritizes a direct walk, Easy prefers lower hills at a slower pace, and Green adds a nearby park waypoint when it fits. Options may overlap. Addresses are sent to Photon or Nominatim when searched. Coordinates and map pins skip address search.
 
-Road disruption data comes from Toronto Open Data (`road-restrictions` package). A small script pulls the latest catalog and restriction records into `public/data/`. During routing, closures near the path get flagged on the map.
+Elevation comes from the OpenTopoData SRTM terrain model. Grades are estimates over sampled terrain. Missing elevation and unverified stairs are labeled in the interface.
 
-Elevation is sampled along the chosen route via OpenTopoData (SRTM) and summarized as ascent, descent, and max grade.
+## Run and verify
 
-## Run locally
-
-```bash
-npm install
+```sh
+npm ci
+npm test
 npm run dev
 ```
 
-Refresh open data files:
+Use the built-in example to check a full walk and compare its directions and City reports without entering a personal address.
 
-```bash
+```sh
 npm run update:data
-```
-
-Build for production:
-
-```bash
 npm run build
+npm run preview
 ```
+
+Serve the resulting `dist/` directory from an HTTPS static host. The build supports repository subpaths. Location is optional and requires browser permission.
